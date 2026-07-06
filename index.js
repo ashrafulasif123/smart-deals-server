@@ -32,6 +32,19 @@ async function run() {
     const db = client.db("smartdbUser");
     const productsCollection = db.collection("products");
 
+    app.get("/products", async (req, res) => {
+      const cursor = productsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productsCollection.findOne(query);
+      res.send(result);
+    });
+
     app.post("/products", async (req, res) => {
       const newProduct = req.body;
       const result = await productsCollection.insertOne(newProduct);
@@ -44,6 +57,7 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
+          name: updatedProduct.name,
           price: updatedProduct.price,
         },
       };
