@@ -33,7 +33,21 @@ async function run() {
     const productsCollection = db.collection("products");
 
     app.get("/products", async (req, res) => {
-      const cursor = productsCollection.find();
+      /* const projectFields = { title: 1, price_min: 1, price_max: 1, image: 1 };
+      const cursor = productsCollection
+        .find()
+        .sort({ price_min: 1 })
+        .skip(2)
+        .limit(5)
+        .project(projectFields); */
+
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.email = email;
+      }
+      console.log(query);
+      const cursor = productsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });

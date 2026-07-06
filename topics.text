@@ -1,0 +1,4 @@
+.sort({ price_min: 1 })
+.skip(2)
+.limit(5)
+.project(projectFields);
