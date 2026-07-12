@@ -61,7 +61,6 @@ async function run() {
       if (email) {
         query.email = email;
       }
-      console.log(query);
       const cursor = productsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
@@ -76,7 +75,6 @@ async function run() {
 
     app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const query = { _id: id };
       const result = await productsCollection.findOne(query);
       res.send(result);
@@ -102,6 +100,15 @@ async function run() {
       res.send(result);
     });
 
+    //Total bids for a product
+    app.get("/products/bids/:productId", async (req, res) => {
+      const productId = req.params.productId;
+      const query = { product: productId };
+      const cursor = bidsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.delete("/products/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -110,6 +117,7 @@ async function run() {
     });
 
     // bids related api
+    // bids for all products or a person bids
     app.get("/bids", async (req, res) => {
       const email = req.query.email;
       const query = {};
@@ -130,15 +138,8 @@ async function run() {
 
     app.post("/bids", async (req, res) => {
       const newBid = req.body;
-      const id = req.body._id;
-      const query = { _id: id };
-      const existProduct = await bidsCollection.findOne(query);
-      if (existProduct) {
-        res.send({ message: "You have already bid this product" });
-      } else {
-        const result = await bidsCollection.insertOne(newBid);
-        res.send(result);
-      }
+      const result = await bidsCollection.insertOne(newBid);
+      res.send(result);
     });
 
     app.delete("/bids/:id", async (req, res) => {
