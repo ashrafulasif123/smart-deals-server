@@ -130,8 +130,15 @@ async function run() {
 
     app.post("/bids", async (req, res) => {
       const newBid = req.body;
-      const result = await bidsCollection.insertOne(newBid);
-      res.send(result);
+      const id = req.body._id;
+      const query = { _id: id };
+      const existProduct = await bidsCollection.findOne(query);
+      if (existProduct) {
+        res.send({ message: "You have already bid this product" });
+      } else {
+        const result = await bidsCollection.insertOne(newBid);
+        res.send(result);
+      }
     });
 
     app.delete("/bids/:id", async (req, res) => {
