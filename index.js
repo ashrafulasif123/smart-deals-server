@@ -100,15 +100,6 @@ async function run() {
       res.send(result);
     });
 
-    //Total bids for a product
-    app.get("/products/bids/:productId", async (req, res) => {
-      const productId = req.params.productId;
-      const query = { product: productId };
-      const cursor = bidsCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
     app.delete("/products/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -117,6 +108,14 @@ async function run() {
     });
 
     // bids related api
+    //Total bids for a product
+    app.get("/products/bids/:productId", async (req, res) => {
+      const productId = req.params.productId;
+      const query = { product: productId };
+      const cursor = bidsCollection.find(query).sort({ bid_price: -1 });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
     // bids for all products or a person bids
     app.get("/bids", async (req, res) => {
       const email = req.query.email;
@@ -128,13 +127,23 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-
-    app.get("/bids/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { buyer_email: email };
-      const result = await bidsCollection.findOne(query);
+    /* app.get("/bids", async (req, res) => {
+      const query = {};
+      if (query.email) {
+        query.buyer_email = email;
+      }
+      const cursor = bidsCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
-    });
+    }); */
+
+    // app.get("/bids/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { buyer_email: email };
+    //   const cursor = bidsCollection.find(query);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
 
     app.post("/bids", async (req, res) => {
       const newBid = req.body;
