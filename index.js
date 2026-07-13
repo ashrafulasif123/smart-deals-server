@@ -5,12 +5,13 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 /** client থেকে Server Side অনুমোদন পাওয়ার জন্য CORS Middleware for Express */
 const cors = require("cors");
+require("dotenv").config();
+
 app.use(cors());
 /** Client Side থেকে Data JSON stringify হয়ে আসার সময় JSON Parse করতে হয়  */
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://smartdbUser:3VoBHDBqKYJ6ZOwP@cluster0.mrg0zof.mongodb.net/?appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.mrg0zof.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -127,23 +128,6 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-    /* app.get("/bids", async (req, res) => {
-      const query = {};
-      if (query.email) {
-        query.buyer_email = email;
-      }
-      const cursor = bidsCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
-    }); */
-
-    // app.get("/bids/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { buyer_email: email };
-    //   const cursor = bidsCollection.find(query);
-    //   const result = await cursor.toArray();
-    //   res.send(result);
-    // });
 
     app.post("/bids", async (req, res) => {
       const newBid = req.body;
