@@ -8,7 +8,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 
-const serviceAccount = require("./firebase-service-account.json");
+const serviceAccount = require("./smart-deals-firebase-admin-key.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -22,7 +22,7 @@ const logger = (req, res, next) => {
   next();
 };
 
-const verifyFirebaseToken = (req, res, next) => {
+const verifyFirebaseToken = async (req, res, next) => {
   if (!req.headers.authorization) {
     return res.status(406).send({ message: "Unauthorized Access" });
   }
@@ -32,6 +32,7 @@ const verifyFirebaseToken = (req, res, next) => {
   }
 
   try {
+    await admin.auth().verifyIdToken;
   } catch {}
 
   // verify id token
