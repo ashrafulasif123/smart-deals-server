@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -7,9 +8,36 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 
+const serviceAccount = require("./firebase-service-account.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 app.use(cors());
 /** Client Side থেকে Data JSON stringify হয়ে আসার সময় JSON Parse করতে হয়  */
 app.use(express.json());
+const logger = (req, res, next) => {
+  console.log("Logging Info");
+  next();
+};
+
+const verifyFirebaseToken = (req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(406).send({ message: "Unauthorized Access" });
+  }
+  const token = req.headers.authorization.split(" ")[1];
+  if (!token) {
+    return res.status(406).send({ message: "Unauthorized Access" });
+  }
+
+  try {
+  } catch {}
+
+  // verify id token
+
+  next();
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.mrg0zof.mongodb.net/?appName=Cluster0`;
 
@@ -118,7 +146,8 @@ async function run() {
       res.send(result);
     });
     // bids for all products or a person bids
-    app.get("/bids", async (req, res) => {
+    app.get("/bids", logger, verifyFirebaseToken, async (req, res) => {
+      // console.log("headers", req.headers.authorization);
       const email = req.query.email;
       const query = {};
       if (email) {
