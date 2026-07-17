@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const admin = require("firebase-admin");
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -8,36 +7,49 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 
-const serviceAccount = require("./smart-deals-firebase-admin-key.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
 app.use(cors());
 /** Client Side থেকে Data JSON stringify হয়ে আসার সময় JSON Parse করতে হয়  */
 app.use(express.json());
+
+// firebase admin to verify token
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
+const serviceAccount = require("./smart-deals-firebase-admin-key.json");
+initializeApp({
+  credential: cert(serviceAccount),
+});
+
 const logger = (req, res, next) => {
-  console.log("Logging Info");
+  // console.log("Logging Info");
   next();
 };
 
 const verifyFirebaseToken = async (req, res, next) => {
   if (!req.headers.authorization) {
-    return res.status(406).send({ message: "Unauthorized Access" });
+    return res
+      .status(406)
+      .send({ message: "Unauthorized Access for req.header.authorization" });
   }
   const token = req.headers.authorization.split(" ")[1];
   if (!token) {
-    return res.status(406).send({ message: "Unauthorized Access" });
+    return res.status(406).send({ message: "Unauthorized Access for token" });
   }
-
+  // next();
   try {
-    await admin.auth().verifyIdToken;
-  } catch {}
+    const userInfo = await getAuth().verifyIdToken(token);
+    // console.log(userInfo);
+    req.token_email = userInfo.email;
 
-  // verify id token
+    // console.log("after toke validation", userInfo);
+    next();
+  } catch (error) {
+    // console.log(error.code);
+    // console.log(error.message);
 
-  next();
+    return res.status(401).send({
+      message: "Unauthorized Access verifyToken",
+    });
+  }
 };
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.mrg0zof.mongodb.net/?appName=Cluster0`;
@@ -150,10 +162,18 @@ async function run() {
     app.get("/bids", logger, verifyFirebaseToken, async (req, res) => {
       // console.log("headers", req.headers.authorization);
       const email = req.query.email;
+      const token_email = req.token_email;
+
+      if (email) {
+        if (email != req.token_email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+      }
       const query = {};
       if (email) {
         query.buyer_email = email;
       }
+      // console.log(query);
       const cursor = bidsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
